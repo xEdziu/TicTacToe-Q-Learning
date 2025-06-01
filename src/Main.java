@@ -6,8 +6,8 @@ public class Main {
         double alpha = 0.1;          // współczynnik uczenia
         double gamma = 0.9;          // dyskonto
         double epsilon = 0.7;        // początkowe epsilon (70% eksploracji)
-        int episodes = 10000000;        // liczba epizodów treningu
-        double epsilonDecay = 0.9999999; // współczynnik zanikania epsilon
+        int episodes = 10010000;        // liczba epizodów treningu
+        double epsilonDecay = 0.999999; // współczynnik zanikania epsilon
         double minEpsilon = 0.01;    // dolna granica epsilon
 
         // Tworzymy agenta
@@ -28,7 +28,6 @@ public class Main {
             if (input.equals("t") || input.equals("tak")) {
                 System.out.println("Zapisuję Q-tablicę...");
                 agent.saveQTable(qTableFilename);
-                System.out.println("Q-tablica została zapisana do: " + qTableFilename);
             } else {
                 System.out.println("Nie zapisano Q-tablicy.");
             }
