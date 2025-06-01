@@ -31,6 +31,25 @@ import java.util.Random;
             }
 
             /**
+             * Sprawdza, czy przeciwnik może wygrać w następnym ruchu.
+             * @param board aktualny stan planszy
+             * @param oppPlayer numer przeciwnika (1 lub 2)
+             * @return true, jeśli przeciwnik może wygrać w następnym ruchu, false w przeciwnym razie
+             */
+            private boolean willOpponentWinNext(Board board, byte oppPlayer) {
+                int[] emptyPos = new int[9];
+                int numEmpty = board.getEmptyPositions(emptyPos);
+                for (int i = 0; i < numEmpty; i++) {
+                    int pos = emptyPos[i];
+                    board.makeMove(pos, oppPlayer);
+                    boolean win = board.isWin(oppPlayer);
+                    board.undoMove(pos);
+                    if (win) return true;
+                }
+                return false;
+            }
+
+            /**
              * Przeprowadza proces treningu agenta Q-learning.
              * Agent gra jako '2' (O), a przeciwnik wykonuje losowe ruchy jako '1' (X).
              * Po każdym epizodzie zmniejszany jest epsilon.
@@ -51,10 +70,11 @@ import java.util.Random;
                      */
                     Board board = new Board();
 
-                    /*
-                     * Agent zawsze gra jako '2' (O), a losowy przeciwnik jako '1' (X).
-                     */
-                    byte currentPlayer = 2; // agent zaczyna
+                    // Losuj, kto zaczyna: 1 = X, 2 = O
+                    byte agentPlayer = (rand.nextBoolean() ? (byte)1 : (byte)2);
+                    byte oppPlayer = (agentPlayer == 1) ? (byte)2 : (byte)1;
+                    byte currentPlayer = 1; // X zawsze zaczyna
+
                     int prevStateIndex = -1;
                     int prevAction = -1;
 
@@ -64,18 +84,18 @@ import java.util.Random;
                     while (true) {
                         int stateIndex = board.getStateIndex();
 
-                        if (currentPlayer == 2) {
+                        if (currentPlayer == agentPlayer) {
                             /*
                              * Ruch agenta – wybór akcji i wykonanie.
                              */
                             byte[] fields = board.getFields();
                             int action = agent.chooseAction(stateIndex, fields);
-                            board.makeMove(action, (byte) 2);
+                            board.makeMove(action, agentPlayer);
 
                             /*
                              * Sprawdzenie, czy agent wygrał.
                              */
-                            if (board.isWin((byte) 2)) {
+                            if (board.isWin(agentPlayer)) {
                                 /*
                                  * Stan terminalny: agent wygrał – nagroda +1.
                                  */
@@ -83,6 +103,17 @@ import java.util.Random;
                                 board.undoMove(action);
                                 break;
                             }
+
+                            /*
+                             * Kara za dopuszczenie do natychmiastowej wygranej przeciwnika
+                             */
+                            if (willOpponentWinNext(board, oppPlayer)) {
+                                agent.update(stateIndex, action, -0.8, -1); // kara -0.8
+                                board.undoMove(action);
+                                break;
+                            }
+
+
                             /*
                              * Sprawdzenie remisu.
                              */
@@ -99,20 +130,20 @@ import java.util.Random;
                              */
                             prevStateIndex = stateIndex;
                             prevAction = action;
-                            currentPlayer = 1;
+                            currentPlayer = oppPlayer;
+
                         } else {
                             /*
                              * Ruch losowego przeciwnika.
                              */
-                            byte[] fields = board.getFields();
                             int numEmpty = board.getEmptyPositions(emptyPos);
                             int move = emptyPos[rand.nextInt(numEmpty)];
-                            board.makeMove(move, (byte) 1);
+                            board.makeMove(move, oppPlayer);
 
                             /*
                              * Sprawdzenie, czy przeciwnik wygrał.
                              */
-                            if (board.isWin((byte) 1)) {
+                            if (board.isWin(oppPlayer)) {
                                 /*
                                  * Agent otrzymuje -1 za poprzedni ruch.
                                  */
@@ -136,7 +167,7 @@ import java.util.Random;
                             /*
                              * Gra trwa – wraca ruch do agenta.
                              */
-                            currentPlayer = 2;
+                            currentPlayer = agentPlayer;
                         }
                     }
 
