@@ -7,7 +7,7 @@ public class Main {
         double gamma = 0.9;          // dyskonto
         double epsilon = 0.7;        // początkowe epsilon (70% eksploracji)
         int episodes = 10010000;        // liczba epizodów treningu
-        double epsilonDecay = 0.999999; // współczynnik zanikania epsilon
+        double epsilonDecay = 0.9999995; // współczynnik zanikania epsilon
         double minEpsilon = 0.01;    // dolna granica epsilon
 
         // Tworzymy agenta
